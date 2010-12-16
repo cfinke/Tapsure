@@ -1,7 +1,7 @@
 <!ENTITY tapsure.patternAddInstructions "Tap a pattern on the target below; the pattern will be saved after you stop tapping for one second.">
 <!ENTITY tapsure.patternAddDuplicate "The pattern you tapped is too close to one of your existing patterns.">
 <!ENTITY tapsure.patternAddDone.label "Cancel">
-<!ENTITY tapsure.dialog.title "Password Tap">
+<!ENTITY tapsure.dialog.title "Tapsure">
 <!ENTITY tapsure.patternAttemptInstructions "Tap your password pattern on the target below. Once you've entered it correctly, this dialog will close.">
 <!ENTITY tapsure.passwordAttemptCancel.label "Cancel">
 <!ENTITY tapsure.settings.reset.title "Reset">

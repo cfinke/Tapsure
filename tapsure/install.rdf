@@ -3,11 +3,12 @@
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>tapsure@efinke.com</em:id>
 		<em:name>Tapsure</em:name>
-		<em:version>1.0pre</em:version>
+		<em:version>1.0</em:version>
 		
 		<em:description>Tap your passwords.</em:description>
 		<em:creator>Christopher Finke</em:creator>
-		<em:optionsURL>chrome://tapsure/content/settings-mobile.xul</em:optionsURL>    
+		<em:iconURL>chrome://tapsure/skin/icon-64.png</em:iconURL>
+		<em:optionsURL>chrome://tapsure/content/settings-mobile.xul</em:optionsURL>
 		<em:homepageURL>http://www.chrisfinke.com/addons/tapsure/</em:homepageURL>
 		
 		<!-- Fennec -->
@@ -16,7 +17,7 @@
 			<Description>
 				<em:id>{a23983c0-fd0e-11dc-95ff-0800200c9a66}</em:id>
 				<em:minVersion>4.0b1</em:minVersion>
-				<em:maxVersion>4.0b3pre</em:maxVersion>
+				<em:maxVersion>4.0b4pre</em:maxVersion>
 			</Description>
 		</em:targetApplication>
 		

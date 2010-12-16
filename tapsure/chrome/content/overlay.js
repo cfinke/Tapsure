@@ -477,23 +477,20 @@ var TAPSURE = {
 	/**
 	 * Determine whether a sequence matches an existing pattern. 
 	 */
-	analyzeSequence : function (seq) {
-		if (seq.length > 0) {
+	analyzeSequence : function (attempt) {
+		if (attempt.length > 0) {
+			var baseline = attempt[0];
+			
+			// Normalize each timestamp to the time since the first click.
+			var attempt = attempt.map(function (el) { return el - baseline; });
+			
+			var attempt_duration = attempt[attempt.length - 1];
+			
 			patternLoop : for (var q = 0, _len = TAPSURE.patterns.length; q < _len; q++) {
-				if (typeof TAPSURE.patterns[q] == 'undefined') continue;
-				
 				var target = TAPSURE.patterns[q].pattern;
-				var target_duration = target[target.length - 1];
 				
-				if (seq.length >= target.length) {
-					var attempt = seq.slice(seq.length - target.length);
-					
-					var baseline = attempt[0];
-					
-					// Normalize each timestamp to the time since the first click.
-					var attempt = attempt.map(function (el) { return el - baseline; });
-					
-					var attempt_duration = attempt[attempt.length - 1];
+				if (attempt.length == target.length) {
+					var target_duration = target[target.length - 1];
 				
 					// Discard sequences that are 50% longer or shorter than the original sequence.
 					if (Math.abs(attempt_duration - target_duration) > (target_duration * 0.5)) {
@@ -503,15 +500,15 @@ var TAPSURE = {
 					var lengthRatio = target_duration / attempt_duration;
 					
 					// Normalize the total length of the sequence.
-					attempt = attempt.map(function (el, idx, arr) {
+					var normalized_attempt = attempt.map(function (el, idx, arr) {
 						return Math.round(el * lengthRatio);
 					});
 					
 					// Allow a variation on each click relative to the length of the original rhythm.
 					var allowedVariation = Math.round(target_duration / 10);
 				
-					for (var i = 0, _len = attempt.length; i < _len; i++) {
-						if (Math.abs(attempt[i] - target[i]) > allowedVariation) {
+					for (var i = 0, _len = normalized_attempt.length; i < _len; i++) {
+						if (Math.abs(normalized_attempt[i] - target[i]) > allowedVariation) {
 							continue patternLoop;
 						}
 					}
