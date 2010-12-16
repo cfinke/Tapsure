@@ -4,52 +4,45 @@ var TAPSURE = {
 	 */
 	patterns : [],
 	
-	_prefs : null,
-	get prefs() {
-		if (!TAPSURE._prefs) { 
-			TAPSURE._prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("extensions.tapsure.");
-			TAPSURE._prefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
-			TAPSURE._prefs.addObserver("", TAPSURE, false);
-		}
-		
-		return TAPSURE._prefs;
-	},
+	prefs : null,
 	
+	/**
+	 * Lazy strings getter.
+	 */
 	_strings : null,
 	get strings() { if (!TAPSURE._strings) { TAPSURE._strings = document.getElementById("tapsure-bundle"); } return TAPSURE._strings; },
 	
 	load : function () {
-		TAPSURE.log("in load");
-		
 		removeEventListener("load", TAPSURE.load, false);
 		
 		// Listener to initialize options panel state when it's available.
 		document.getElementById("addons-list").addEventListener("AddonOptionsLoad", TAPSURE.optionsLoad, false);
 		
 		// tapLong on a password field initiates tap-password entry.
+		// We send all long taps to the content script to find out if they were 
+		// tapped on an input[type=password] field; this listener receives
+		// the message back from content.
 		messageManager.addMessageListener("Tapsure:tapLong", TAPSURE.tapLongEvent);
 		
 		// blur on a password field initiates the request from the add-on to add a tap pattern
+		// Again, the content script has to tell us what field was blurred.
 		messageManager.addMessageListener("Tapsure:blur", TAPSURE.blurEvent);
-		
-		// Logging method for the content script.
-		messageManager.addMessageListener("Tapsure:log", TAPSURE.logEvent);
 		
 		messageManager.loadFrameScript("chrome://tapsure/content/content_script.js", true);
 		
 		// TapLong listener to send TapLong events to the content script.
 		document.addEventListener("TapLong", TAPSURE.chromeTapLong, false);
 		
+		TAPSURE.prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("extensions.tapsure.");
+		TAPSURE.prefs.QueryInterface(Components.interfaces.nsIPrefBranch2);
+		TAPSURE.prefs.addObserver("", TAPSURE, false);
+		
 		TAPSURE.loadPatterns();
 		
 		addEventListener("unload", TAPSURE.unload, false);
-		
-		TAPSURE.log("out load");
 	},
 	
 	unload : function () {
-		TAPSURE.log("in unload");
-		
 		removeEventListener("unload", TAPSURE.unload, false);
 		
 		document.getElementById("addons-list").removeEventListener("AddonOptionsLoad", TAPSURE.optionsLoad, false);
@@ -58,12 +51,13 @@ var TAPSURE = {
 		
 		messageManager.removeMessageListener("Tapsure:tapLong", TAPSURE.tapLongEvent);
 		messageManager.removeMessageListener("Tapsure:blur", TAPSURE.blurEvent);
-		messageManager.removeMessageListener("Tapsure:log", TAPSURE.logEvent);
 		
 		TAPSURE.prefs.removeObserver("", TAPSURE);
-		
-		TAPSURE.log("out unload");
 	},
+	
+	/**
+	 * Pref observer.
+	 */
 	
 	observe : function(subject, topic, data) {
 		if (topic != "nsPref:changed") {
@@ -82,11 +76,14 @@ var TAPSURE = {
 	 */
 	
 	chromeTapLong : function (e) {
-		var browser = getBrowser();
+		// It only makes sense to do anything if the user has saved one or more patterns.
+		if (TAPSURE.patterns.length > 0) {
+			var browser = getBrowser();
 		
-		var pos = browser.transformClientToBrowser(e.clientX, e.clientY);
+			var pos = browser.transformClientToBrowser(e.clientX, e.clientY);
 		
-		browser.messageManager.sendAsyncMessage("Tapsure:chromeTapLong", pos);
+			browser.messageManager.sendAsyncMessage("Tapsure:chromeTapLong", pos);
+		}
 	},
 	
 	/**
@@ -94,11 +91,7 @@ var TAPSURE = {
 	 */
 	
 	optionsLoad : function () {
-		TAPSURE.log("in optionsLoad");
-		
 		TAPSURE.toggleResetButton();
-		
-		TAPSURE.log("out optionsLoad");
 	},
 	
 	/**
@@ -106,8 +99,6 @@ var TAPSURE = {
 	 */
 	
 	toggleResetButton : function () {
-		TAPSURE.log("in toggleResetButton");
-		
 		var shouldBeEnabled = false;
 		var resetButton = document.getElementById("tapsure-button-reset");
 		
@@ -129,8 +120,6 @@ var TAPSURE = {
 				resetButton.setAttribute("disabled", "true");
 			}
 		}
-		
-		TAPSURE.log("out toggleResetButton");
 	},
 	
 	/**
@@ -138,8 +127,6 @@ var TAPSURE = {
 	 */
 	
 	loadPatterns : function () {
-		TAPSURE.log("in loadPatterns");
-		
 		var loginManager = Components.classes["@mozilla.org/login-manager;1"].getService(Components.interfaces.nsILoginManager);
 		
 		var hostname = "chrome://tapsure";
@@ -151,11 +138,7 @@ var TAPSURE = {
 			TAPSURE.patterns.push( { "pattern" : JSON.parse(logins[i].username), "password" : logins[i].password } );
 		}
 		
-		TAPSURE.log("Patterns: " + TAPSURE.patterns.toSource());
-		
 		TAPSURE.toggleResetButton();
-		
-		TAPSURE.log("out loadPatterns");
 	},
 	
 	relevantPasswordFieldId : null,
@@ -166,14 +149,10 @@ var TAPSURE = {
 	 */
 	
 	tapLongEvent : function (msg) {
-		TAPSURE.log("in tapLongEvent");
-		
 		TAPSURE.returnMessageManager = msg.target.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.messageManager;
 		TAPSURE.relevantPasswordFieldId = msg.json.fieldId;
 		
 		TAPSURE.showPatternAttemptDialog();
-		
-		TAPSURE.log("out tapLongEvent");
 	},
 	
 	attemptPatternDialog : null,
@@ -205,8 +184,6 @@ var TAPSURE = {
 	 * Event generated by the user tapping on the password entry tap target.
 	 */
 	attemptPatternClick : function (evt) {
-		TAPSURE.log("in attemptPatternClick");
-		
 		if (TAPSURE.analysisTimer) clearTimeout(TAPSURE.analysisTimer);
 		
 		var now = new Date().getTime();
@@ -240,24 +217,20 @@ var TAPSURE = {
 				TAPSURE.shake(box);
 			}
 		}, 1000);
-		
-		TAPSURE.log("out tapEvent");
 	},
 	
 	/**
 	 * The user unfocused a password field after entering a value.
 	 * Check if they want to convert this password to a tap pattern.
-	 * @todo Don't ask again on the same passwords.
 	 */
 	
 	blurEvent : function (msg) {
-		TAPSURE.log("in blurEvent");
-		
 		var password = msg.json.password;
 		var patternExists = false;
 		
 		TAPSURE.patterns.forEach(function (entry) {
 			if (!patternExists && entry.password == password) {
+				// The user already has a pattern saved for this password.
 				patternExists = true;
 			}
 		});
@@ -267,11 +240,10 @@ var TAPSURE = {
 				TAPSURE.pendingPassword = password;
 			
 				var box = window.getNotificationBox(content);
-				// @todo image
 				var appendedBox = box.appendNotification(
 					TAPSURE.strings.getString("tapsure.savePrompt.label"),
 					"tapsure", 
-					null, 
+					null,
 					box.PRIORITY_INFO_MEDIUM, 
 					[
 						{ 
@@ -292,9 +264,11 @@ var TAPSURE = {
 				appendedBox.timeout = (new Date().getTime()) + 20000;
 			}
 		}
-		
-		TAPSURE.log("out blurEvent");
 	},
+	
+	/**
+	 * Never ask about the previous password again.
+	 */
 	
 	neverAsk : function () {
 		var hash = TAPSURE_MD5("tapsure" + TAPSURE.pendingPassword);
@@ -325,8 +299,6 @@ var TAPSURE = {
 	 */
 	
 	addPatternClick : function (evt) {
-		TAPSURE.log("in addPatternClick");
-		
 		if (TAPSURE.addPatternTimer) clearTimeout(TAPSURE.addPatternTimer);
 		
 		TAPSURE.addPatternSequence.push(new Date().getTime());
@@ -351,7 +323,7 @@ var TAPSURE = {
 					// Save the pattern for this password.
 				
 					document.getElementById("tapsure-pattern-add-instructions").selectedIndex = 0;
-				
+					
 					var baseline = TAPSURE.addPatternSequence[0];
 				
 					var normalizedSequence = TAPSURE.addPatternSequence.map(function (el) {
@@ -363,24 +335,11 @@ var TAPSURE = {
 					TAPSURE.pendingPassword = null;
 					
 					TAPSURE.hidePatternAddDialog();
-					
-					/*
-					TAPSURE.fadeColor(field, "backgroundColor", 255, 255, 0, 255, 255, 255);
-				
-					var button = document.getElementById("tapsure-pattern-add-close");
-					button.setAttribute("label", button.getAttribute("label-success"));
-				
-					setTimeout(function (aButton) {
-						aButton.setAttribute("label", aButton.getAttribute("label-default"));
-					}, 3000, button);
-					*/
 				}
 			}
 			
 			TAPSURE.addPatternSequence = [];
 		}, 1000);
-		
-		TAPSURE.log("out addPatternClick");
 	},
 	
 	addPatternDialog : null,
@@ -427,6 +386,10 @@ var TAPSURE = {
 		TAPSURE.toggleResetButton();
 	},
 	
+	/**
+	 * Check whether Tapsure should ask the user to add a pattern.
+	 */
+	
 	shouldPrompt : function (password) {
 		var hash = TAPSURE_MD5("tapsure" + password);
 		var hashes = [];
@@ -449,8 +412,6 @@ var TAPSURE = {
 	 */
 	
 	reset : function () {
-		TAPSURE.log("in reset");
-		
 		var loginManager = Components.classes["@mozilla.org/login-manager;1"].getService(Components.interfaces.nsILoginManager);
 		
 		var hostname = "chrome://tapsure";
@@ -518,8 +479,6 @@ var TAPSURE = {
 			}
 		}
 		
-		TAPSURE.log("out analyzeSequence");
-		
 		return false;
 	},
 	
@@ -581,10 +540,6 @@ var TAPSURE = {
 			
 			element.style.marginRight = offset + "in";
 		}, 100);
-	},
-	
-	logEvent : function (msg) {
-		TAPSURE.log(msg.json.data);
 	},
 	
 	log : function (msg) {
