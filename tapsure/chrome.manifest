@@ -1,0 +1,6 @@
+content     tapsure                    chrome/content/
+skin        tapsure    classic         chrome/skin/
+
+locale      tapsure    en-US           chrome/locale/en-US/
+
+overlay     chrome://browser/content/browser.xul           chrome://tapsure/content/overlay.xul

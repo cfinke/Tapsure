@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!DOCTYPE dialog SYSTEM "chrome://tapsure/locale/locale.dtd">
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	<vbox class="prompt-header" flex="1">
+		<label class="prompt-title" crop="center" flex="1">&tapsure.dialog.title;</label>
+		
+		<scrollbox orient="vertical" class="prompt-message" flex="1">
+			<description>&tapsure.patternAttemptInstructions;</description>
+		</scrollbox>
+
+		<vbox flex="1">
+			<spacer flex="1" />
+			<hbox flex="1" pack="center">
+				<vbox class="tapsure-target" id="tapsure-attempt-pattern-target" />
+			</hbox>
+			<spacer flex="1" />
+		</vbox>
+	</vbox>
+	
+	<hbox class="prompt-buttons">
+		<button class="prompt-button" label="&tapsure.passwordAttemptCancel.label;" oncommand="TAPSURE.hidePatternAttemptDialog();" />
+	</hbox>
+</dialog>

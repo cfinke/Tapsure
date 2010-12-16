@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<!DOCTYPE vbox SYSTEM "chrome://tapsure/locale/locale.dtd">
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	<setting type="control" title="&tapsure.settings.reset.title;">
+		<button label="&tapsure.settings.reset.label;" id="tapsure-button-reset" oncommand="TAPSURE.reset();" />
+	</setting>
+</vbox>

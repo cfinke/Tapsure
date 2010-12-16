@@ -1,0 +1,10 @@
+.tapsure-target {
+	border: 1px solid #000;
+	-moz-border-radius: 0.25in;
+	min-width: 1.5in;
+	min-height: 1.5in;
+}
+
+.tapsure-error {
+	color: #f00;
+}
