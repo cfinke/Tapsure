@@ -2,7 +2,6 @@
 <?xml-stylesheet href="chrome://tapsure/skin/browser.css" type="text/css"?>
 <!DOCTYPE overlay SYSTEM "chrome://tapsure/locale/locale.dtd">
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-	<script type="application/x-javascript" src="chrome://tapsure/content/md5.js"/>
 	<script type="application/x-javascript" src="chrome://tapsure/content/overlay.js"/>
 	<script type="application/x-javascript">
 		<![CDATA[

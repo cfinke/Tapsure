@@ -7,6 +7,9 @@ var TAPSURE_CONTENT = {
 	},
 	
 	/*
+	
+	// There's no documentation on when a content script can remove its message and event listeners.
+	
 	unload : function () {
 		removeEventListener("unload", TAPSURE_CONTENT.unload, false);
 		
@@ -15,6 +18,10 @@ var TAPSURE_CONTENT = {
 		removeMessageListener("Tapsure:unlock", TAPSURE_CONTENT.passwordUnlock);
 	},
 	*/
+	
+	/**
+	 * A content blur event. Check whether it's on a password field.
+	 */
 	
 	blur : function (e) {
 		var target = e.originalTarget;
@@ -25,6 +32,10 @@ var TAPSURE_CONTENT = {
 			}
 		}
 	},
+	
+	/**
+	 * A long tap originated in chrome; check whether it corresponds to a password input field.
+	 */
 	
 	chromeTapLong : function (msg) {
 		var target = elementFromPoint(msg.json.x, msg.json.y);
@@ -40,6 +51,9 @@ var TAPSURE_CONTENT = {
 		}
 	},
 	
+	/**
+	 * The user tapped out a correct pattern.
+	 */
 	passwordUnlock : function (msg) {
 		var field = content.document.getElementById(msg.json.fieldId);
 		field.value = msg.json.password;

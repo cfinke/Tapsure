@@ -271,7 +271,7 @@ var TAPSURE = {
 	 */
 	
 	neverAsk : function () {
-		var hash = TAPSURE_MD5("tapsure" + TAPSURE.pendingPassword);
+		var hash = TAPSURE.md5("tapsure" + TAPSURE.pendingPassword);
 		
 		var hashes = [];
 		
@@ -391,7 +391,7 @@ var TAPSURE = {
 	 */
 	
 	shouldPrompt : function (password) {
-		var hash = TAPSURE_MD5("tapsure" + password);
+		var hash = TAPSURE.md5("tapsure" + password);
 		var hashes = [];
 		var hashesText = TAPSURE.prefs.getCharPref("neverPrompt");
 		if (hashesText) {
@@ -540,6 +540,33 @@ var TAPSURE = {
 			
 			element.style.marginRight = offset + "in";
 		}, 100);
+	},
+	
+	/**
+	 * md5 convenience function for hashing passwords that Tapsure shouldn't ask about.
+	 */
+	
+	md5 : function (str) {
+		/**
+		 * @see https://developer.mozilla.org/en/XPCOM_Interface_Reference/nsICryptoHash
+		 */
+		var converter =  Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Components.interfaces.nsIScriptableUnicodeConverter);  
+		converter.charset = "UTF-8";  
+		
+		var result = {};  
+		var data = converter.convertToByteArray(str, result);  
+		
+		var ch = Components.classes["@mozilla.org/security/hash;1"].createInstance(Components.interfaces.nsICryptoHash);  
+		ch.init(ch.MD5);  
+		ch.update(data, data.length);
+		
+		var hash = ch.finish(false);
+		
+		function toHexString(charCode) {  
+			return ("0" + charCode.toString(16)).slice(-2);
+		}  
+		
+		return [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
 	},
 	
 	log : function (msg) {
